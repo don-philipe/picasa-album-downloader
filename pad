@@ -1,0 +1,89 @@
+#!/bin/sh
+
+### LICENSE ###
+# pad - picasa-album-downloader:
+#	getting pictures from private picasa albums without being logged in or registered
+#
+# Copyright (C) 2011 don_philipe - don_philipe@gmx.de 
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###
+
+OPTIONS="-q --keep-session-cookies --save-cookies cookies --load-cookies cookies"
+VERSION="\nversion: 0.9\n"
+
+main()
+{
+	echo "Getting links to pictures..."
+	wget $OPTIONS -O index "${url}"
+
+	echo "Process linklist..."
+	linklist="$(sed '1,/lhcl_feedview/d;1,1d' index | sed '2,$d')"	# cut everything before and after the links
+	linklist="$(echo $linklist | sed -e 's/\"><\/a><p><a\ //g;s/[^>]*//;s/><\/a><\/p><\/div><div><a\ //g;s/><img\ src=\"/\+/g;s/\.[Jj][Pp][Gg]/\.jpg+/g')"
+	i=1	# number of links
+	while true
+	do
+		linklist="${linklist#*+}"
+		help="$(echo `expr "$linklist" : '\([^+]*\)'`)"
+		if [ ! -n "$(echo $help | grep jpg)" ]
+		then
+			(( i-- ))
+			break	# loop breaks when there are no more picture
+		fi
+		linkarray[$i]="$(echo $help | sed 's/s[0-9][0-9][0-9]\///')"
+		linklist="${linklist#*+}"
+		(( i++ ))
+	done
+
+	echo "Downloading $i pictures now..."
+	j=0
+	for link in "${linkarray[@]}"
+	do
+		wget -nc $OPTIONS "${link}"
+		percentage=$(( $j * 100 / $i ))
+		echo "${link##*/}	${percentage}%"
+		(( j++ ))
+	done
+
+	echo "Done."
+	unset linkarray
+	rm cookies
+	rm index
+}
+
+help()
+{
+	cat <<HELP
+
+Download all pictures from a private picasaalbum without being registered or logged in. The pictures will appear in the current directory.
+
+Syntax: picasa [options] [url]
+	
+Options:
+	-h, --help	show this help
+	-v, --version	show the version
+
+HELP
+}
+
+while [ "${1}" != '' ]
+do
+	[ "${1}" == -v ] || [ "${1}" == --version ] && echo -e $VERSION && exit 0
+	[ "${1}" == -h ] || [ "${1}" == --help ] && help && exit 0
+	[ -n "${1}" ] && url="${1}" && shift
+done
+
+main
+
+exit 0
