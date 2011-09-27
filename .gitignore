@@ -1,10 +1,2 @@
-
-localMakefile
-bin
-doc/pysrc
-gfx
-!pysrc/gfx
-pybin
-render
-doc/dias/*.dia
+*.~
 *.swp

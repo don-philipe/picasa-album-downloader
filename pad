@@ -57,6 +57,7 @@ main()
 	done
 
 	echo "Done."
+
 	unset linkarray
 	rm cookies
 	rm index
@@ -76,6 +77,8 @@ Options:
 
 HELP
 }
+
+### script starts here ###
 
 while [ "${1}" != '' ]
 do

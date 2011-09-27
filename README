@@ -1,8 +1,12 @@
 This little script want to help those who get a link to a private picasaalbum and have no account there so that they would have to download every photo manually.
 
+===
+
 What you need:
 	* a shell
 	* wget
+
+===
 
 Usage:
 	./pad [options] [url]
